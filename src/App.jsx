@@ -17,10 +17,97 @@ const initialMessages = [
   }
 ];
 
+function ParticleBackground() {
+  const particles = React.useMemo(() => 
+    Array.from({ length: 50 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 5}s`,
+    })), []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
+          style={{ left: p.left, top: p.top, animationDelay: p.delay }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function MatrixRain() {
+  const columns = React.useMemo(() => 
+    Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2,
+      chars: Array.from({ length: 30 }, () => Math.floor(Math.random() * 120))
+    })), []);
+
+  const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+      {columns.map((col) => (
+        <div
+          key={col.id}
+          className="absolute text-cyan-400 font-mono text-xs leading-none"
+          style={{
+            left: `${col.id * 5}%`,
+            animation: `matrix-fall ${col.duration}s linear infinite`,
+            animationDelay: `${col.delay}s`,
+          }}
+        >
+          {col.chars.map((charIdx, i) => (
+            <div key={i} className="opacity-60">
+              {characters[charIdx % characters.length]}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TypewriterText({ text, speed = 50 }) {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
+
+  useEffect(() => {
+    if (!text) return;
+    
+    setDisplayedText('');
+    setIsTyping(true);
+    
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(prev => prev + text.charAt(i));
+        i++;
+      } else {
+        setIsTyping(false);
+        clearInterval(timer);
+      }
+    }, speed);
+    
+    return () => clearInterval(timer);
+  }, [text, speed]);
+
+  return (
+    <span>
+      {displayedText}
+      {isTyping && <span className="animate-pulse">|</span>}
+    </span>
+  );
+}
 function AIOrb({ isThinking, isListening }) {
   return (
     <div className="flex flex-col items-center justify-center mb-6 pt-4">
-      <div className={`w-24 h-24 rounded-full relative flex items-center justify-center border-2 transition-all duration-700 ${isListening ? 'border-cyan-400 scale-110 bg-cyan-500/10 shadow-[0_0_80px_rgba(6,182,212,0.6)]' :
+      <div className={`w-24 h-24 rounded-full relative flex items-center justify-center border-2 transition-all duration-700 glow-cyan ${isListening ? 'border-cyan-400 scale-110 bg-cyan-500/10 shadow-[0_0_80px_rgba(6,182,212,0.6)]' :
           isThinking ? 'border-cyan-500/50 shadow-[0_0_40px_rgba(6,182,212,0.4)]' :
             'border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.2)]'
         } bg-black/60 backdrop-blur-md`}>
@@ -38,16 +125,21 @@ function AIOrb({ isThinking, isListening }) {
           <Bot size={32} className={`z-10 transition-all duration-500 ${isListening ? 'text-white scale-110' : 'text-cyan-400'}`} />
         </div>
 
-        {/* Outer Rings */}
+        {/* Enhanced Outer Rings */}
         <Motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-          className={`absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400/60 border-b-cyan-400/20`}
+          className={`absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400/60 border-b-cyan-400/20 shimmer`}
         />
         <Motion.div
           animate={{ rotate: -360 }}
           transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
           className={`absolute -inset-2 rounded-full border border-transparent border-l-cyan-500/30 border-r-cyan-500/10`}
+        />
+        <Motion.div
+          animate={{ rotate: 180 }}
+          transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+          className={`absolute -inset-4 rounded-full border border-transparent border-t-cyan-400/20 border-b-cyan-400/10`}
         />
         
         {isListening && (
@@ -189,7 +281,7 @@ function ModulesView() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
-       <h2 className="text-2xl font-bold tracking-tighter uppercase text-cyan-400 mb-8 flex items-center gap-3">
+      <h2 className="text-2xl font-bold tracking-tighter uppercase text-cyan-400 flex items-center gap-3 holographic-text">
         <Layout className="text-cyan-500" /> Active Modules
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -199,7 +291,7 @@ function ModulesView() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.05 }}
             key={mod.name}
-            className="hud-border group bg-white/[0.02] hover:bg-white/[0.05] p-6 rounded-xl transition-all cursor-pointer border border-white/5 hover:border-cyan-500/30"
+            className="hud-border group bg-white/[0.02] hover:bg-white/[0.05] p-6 rounded-xl transition-all cursor-pointer border border-white/5 hover:border-cyan-500/30 hover:scale-105 hover:rotate-1 hover:shadow-[0_0_50px_rgba(6,182,212,0.3)] transform-gpu"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-cyan-500/10 rounded-lg text-cyan-400 group-hover:bg-cyan-500 group-hover:text-black transition-all">
@@ -283,12 +375,15 @@ function App() {
   const [isRecording, setIsRecording] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [memories, setMemories] = useState(() => {
     const saved = localStorage.getItem('friday_memories');
     return saved ? JSON.parse(saved) : [];
   });
 
   const messagesEndRef = useRef(null);
+  const lastVoiceCommandRef = useRef('');
+  const lastVoiceCommandTimeRef = useRef(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -393,7 +488,7 @@ function App() {
         setIsExecutingTask(isCmd);
         setIsTyping(!isCmd);
         
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 200));
         let responseText = await handleSingleCommand(intent, cmd, contextMessages);
         
         const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -411,7 +506,7 @@ function App() {
         speakText(responseText);
         
         if (i < commandsArray.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
       }
     } catch (error) {
@@ -444,8 +539,9 @@ function App() {
   };
 
   const processCommand = async (text) => {
-    if (!text || isSpeaking) return;
+    if (!text || isSpeaking || isProcessing) return;
     
+    setIsProcessing(true);
     setIsListening(false);
     const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const newUserMessage = { id: Date.now(), text, sender: 'user', timestamp };
@@ -460,8 +556,14 @@ function App() {
     setInputValue('');
     setIsTyping(true);
     
-    const commandsArray = text.split(/\s+and\s+|\s+then\s+|,/i).map(c => c.trim()).filter(Boolean);
-    
+    const normalizedText = text.trim();
+    const commandCandidates = normalizedText
+      .split(/\b(?:and then|then|;)\b/i)
+      .map(c => c.trim())
+      .filter(Boolean);
+
+    const commandsArray = commandCandidates.length > 1 ? commandCandidates : [normalizedText];
+
     try {
       await executeCommands(commandsArray, [...messages, newUserMessage]);
     } catch (err) {
@@ -469,6 +571,7 @@ function App() {
     } finally {
       setIsExecutingTask(false);
       setIsTyping(false);
+      setIsProcessing(false);
     }
   };
 
@@ -517,8 +620,17 @@ function App() {
         
         const parts = finalTranscript.split(foundWakeWord);
         const command = parts[parts.length - 1].trim();
-        
+        const normalizedCommand = command.toLowerCase().trim();
+        const now = Date.now();
+
         if (command) {
+          if (normalizedCommand && normalizedCommand === lastVoiceCommandRef.current && now - lastVoiceCommandTimeRef.current < 3000) {
+            return;
+          }
+
+          lastVoiceCommandRef.current = normalizedCommand;
+          lastVoiceCommandTimeRef.current = now;
+
           processCommand(command);
           setIsListening(false);
         } else {
@@ -564,11 +676,13 @@ function App() {
   }, [isMicEnabled]);
 
   return (
-    <div className="h-screen w-screen bg-[#050505] flex overflow-hidden font-sans text-[#ececf1] selection:bg-cyan-500/20 relative">
+    <div className="h-screen w-screen bg-[#050505] flex overflow-hidden font-sans text-[#ececf1] selection:bg-cyan-500/20 relative perspective-1000">
       
-      {/* Animated Background Grid */}
+      {/* Enhanced Animated Background */}
       <div className="absolute inset-0 neural-grid opacity-20 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(6,182,212,0.1),transparent_70%)] pointer-events-none" />
+      <ParticleBackground />
+      <MatrixRain />
       <div className="scanline" />
 
       <AnimatePresence>
@@ -578,7 +692,7 @@ function App() {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 280, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="h-full bg-black/60 border-r border-cyan-500/10 flex flex-col z-50 overflow-hidden flex-shrink-0 backdrop-blur-2xl"
+            className="h-full bg-black/60 border-r border-cyan-500/10 flex flex-col z-50 overflow-hidden flex-shrink-0 backdrop-blur-2xl glow-cyan"
           >
             <div className="p-4 flex flex-col h-full">
               <div className="flex items-center space-x-3 px-3 py-4 mb-6">
@@ -642,7 +756,7 @@ function App() {
       </AnimatePresence>
 
       <main className="flex-1 flex flex-col relative h-full bg-transparent z-10">
-        <header className="h-16 flex items-center justify-between px-6 z-40 bg-black/20 backdrop-blur-md border-b border-cyan-500/10">
+        <header className="h-16 flex items-center justify-between px-6 z-40 bg-black/20 backdrop-blur-md border-b border-cyan-500/10 glow-cyan">
           <div className="flex items-center space-x-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -703,9 +817,9 @@ function App() {
                       key={msg.id} 
                       className={`flex w-full py-8 group transition-all duration-500 ${msg.sender === 'ai'
                         ? msg.isCommand
-                          ? 'bg-cyan-500/5 shadow-[inset_0_0_30px_rgba(6,182,212,0.05)] border-y border-cyan-500/10 rounded-2xl my-4'
+                          ? 'bg-cyan-500/5 shadow-[inset_0_0_30px_rgba(6,182,212,0.05)] border-y border-cyan-500/10 rounded-2xl my-4 glow-cyan'
                           : 'bg-transparent'
-                        : 'bg-white/[0.01] rounded-2xl'
+                        : 'bg-white/[0.01] rounded-2xl hover:bg-white/[0.02] transition-all'
                       }`}
                     >
                       <div className="max-w-3xl mx-auto flex w-full px-4">
@@ -820,7 +934,7 @@ function App() {
 
               <form
                 onSubmit={handleSendMessage}
-                className="relative flex items-center bg-white/[0.03] border border-white/5 rounded-2xl focus-within:bg-white/[0.06] focus-within:border-cyan-500/40 transition-all shadow-2xl backdrop-blur-xl group overflow-hidden"
+                className="relative flex items-center bg-white/[0.03] border border-white/5 rounded-2xl focus-within:bg-white/[0.06] focus-within:border-cyan-500/40 focus-within:shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all shadow-2xl backdrop-blur-xl group overflow-hidden glow-cyan"
               >
                 {/* Glow effect on focus */}
                 <div className="absolute inset-0 bg-cyan-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity" />
@@ -852,8 +966,8 @@ function App() {
                 <div className="pr-3 flex items-center space-x-3 relative z-10">
                   <button
                     type="submit"
-                    disabled={!inputValue.trim()}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${inputValue.trim() ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:scale-105 active:scale-95' : 'bg-white/5 text-white/20'
+                    disabled={!inputValue.trim() || isProcessing}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${inputValue.trim() && !isProcessing ? 'bg-cyan-500 text-black shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:scale-105 active:scale-95' : 'bg-white/5 text-white/20'
                       }`}
                   >
                     <Send size={18} />
